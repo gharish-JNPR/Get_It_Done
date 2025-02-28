@@ -2,16 +2,14 @@ package com.example.getitdone.ui.tasks
 
 import android.annotation.SuppressLint
 import android.graphics.Paint
-import android.text.style.StrikethroughSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.getitdone.data.Task
 import com.example.getitdone.databinding.ItemTaskBinding
-import com.google.android.material.checkbox.MaterialCheckBox
 
-class TasksAdapter(private val listener: TaskUpdatedListener) :
+class TasksAdapter(private val listener: TaskItemClickListener) :
     RecyclerView.Adapter<TasksAdapter.ViewHolder>() {
 
     private var tasks: List<Task> = listOf()
@@ -34,10 +32,13 @@ class TasksAdapter(private val listener: TaskUpdatedListener) :
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder(private val binding: ItemTaskBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(private val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(task: Task) {
             binding.apply {
+                root.setOnLongClickListener {
+                    listener.onTaskDeleted(task)
+                    true
+                }
                 checkBox.isChecked = task.isComplete
                 toggleStar.isChecked = task.isStarred
                 if(task.isComplete){
@@ -56,35 +57,36 @@ class TasksAdapter(private val listener: TaskUpdatedListener) :
                 }
 
 
-//                checkBox.setOnClickListener {
-//                    val updatedTask = task.copy(isComplete = checkBox.isChecked)
-//                    listener.onTaskUpdated(updatedTask)
-//                }
-//                toggleStar.setOnClickListener{
-//                    val updatedTask = task.copy(isStarred = toggleStar.isChecked)
-//                    listener.onTaskUpdated(updatedTask)
-//                }
-            checkBox.addOnCheckedStateChangedListener { _, state ->
-                val updatedTask = when (state) {
-                    MaterialCheckBox.STATE_CHECKED -> { task.copy(isComplete = true) }
-                    else -> { task.copy(isComplete = false) }
+                checkBox.setOnClickListener {
+                    val updatedTask = task.copy(isComplete = checkBox.isChecked)
+                    listener.onTaskUpdated(updatedTask)
                 }
-
-                listener.onTaskUpdated(updatedTask)
-            }
-            toggleStar.addOnCheckedStateChangedListener { _, state ->
-                val updatedTask = when (state) {
-                    MaterialCheckBox.STATE_CHECKED -> { task.copy(isStarred = true) }
-                    else -> { task.copy(isStarred = false) }
+                toggleStar.setOnClickListener{
+                    val updatedTask = task.copy(isStarred = toggleStar.isChecked)
+                    listener.onTaskUpdated(updatedTask)
                 }
-                listener.onTaskUpdated(updatedTask)
-            }
+//            checkBox.addOnCheckedStateChangedListener { _, state ->
+//                val updatedTask = when (state) {
+//                    MaterialCheckBox.STATE_CHECKED -> { task.copy(isComplete = true) }
+//                    else -> { task.copy(isComplete = false) }
+//                }
+//
+//                listener.onTaskUpdated(updatedTask)
+//            }
+//            toggleStar.addOnCheckedStateChangedListener { _, state ->
+//                val updatedTask = when (state) {
+//                    MaterialCheckBox.STATE_CHECKED -> { task.copy(isStarred = true) }
+//                    else -> { task.copy(isStarred = false) }
+//                }
+//                listener.onTaskUpdated(updatedTask)
+//            }
             }
         }
     }
 
-    interface TaskUpdatedListener {
+    interface TaskItemClickListener {
         fun onTaskUpdated(task: Task)
+        fun onTaskDeleted(task: Task)
     }
 
 }
