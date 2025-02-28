@@ -48,6 +48,8 @@ class MainActivity : AppCompatActivity() {
             val dialog = BottomSheetDialog(this@MainActivity)
             dialog.setContentView(root)
 
+            buttonSave.isEnabled = false
+
             editTextTaskTitle.addTextChangedListener {
                 buttonSave.isEnabled = !it.isNullOrEmpty()
             }
