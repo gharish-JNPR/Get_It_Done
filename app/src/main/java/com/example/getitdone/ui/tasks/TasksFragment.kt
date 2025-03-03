@@ -5,17 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.getitdone.data.GetItDoneDatabase
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.example.getitdone.data.Task
-import com.example.getitdone.data.TaskDao
 import com.example.getitdone.databinding.FragmentTasksBinding
-import kotlin.concurrent.thread
+import kotlinx.coroutines.launch
 
 class TasksFragment: Fragment() , TasksAdapter.TaskItemClickListener{
+    private val viewModel : TasksViewModel by viewModels()
     private lateinit var binding: FragmentTasksBinding
-    private val taskDao: TaskDao by lazy {
-        GetItDoneDatabase.getDatabase(requireContext()).getTaskDao()
-    }
     private val adapter = TasksAdapter(this)
 
     override fun onCreateView(
@@ -34,28 +32,27 @@ class TasksFragment: Fragment() , TasksAdapter.TaskItemClickListener{
     }
 
     fun fetchAllTasks() {
-        thread {
-            val tasks = taskDao.getAllTasks()
-
-
-            requireActivity().runOnUiThread {
-                adapter.setTasks(tasks)
-            }
+        lifecycleScope.launch {
+            val tasks = viewModel.fetchTasks()
+            adapter.setTasks(tasks)
         }
+
+//        viewModel.fetchTasks {tasks ->
+//            requireActivity().runOnUiThread {
+//                adapter.setTasks(tasks)
+//            }
+//        }
+
     }
 
     override fun onTaskUpdated(task: Task) {
-        thread{
-            taskDao.updateTask(task)
-            fetchAllTasks()
-        }
+        viewModel.updateTask(task)
+        fetchAllTasks()
     }
 
     override fun onTaskDeleted(task: Task) {
-        thread {
-            taskDao.deleteTask(task)
-            fetchAllTasks()
-        }
+        viewModel.deleteTask(task)
+        fetchAllTasks()
     }
 
 

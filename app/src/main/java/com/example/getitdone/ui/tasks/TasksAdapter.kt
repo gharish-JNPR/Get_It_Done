@@ -35,10 +35,10 @@ class TasksAdapter(private val listener: TaskItemClickListener) :
     inner class ViewHolder(private val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(task: Task) {
             binding.apply {
-                root.setOnLongClickListener {
-                    listener.onTaskDeleted(task)
-                    true
-                }
+//                root.setOnLongClickListener {
+//                    listener.onTaskDeleted(task)
+//                    true
+//                }
                 checkBox.isChecked = task.isComplete
                 toggleStar.isChecked = task.isStarred
                 if(task.isComplete){

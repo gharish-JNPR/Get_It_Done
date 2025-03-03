@@ -1,30 +1,29 @@
 package com.example.getitdone.ui
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.getitdone.data.GetItDoneDatabase
 import com.example.getitdone.data.Task
-import com.example.getitdone.data.TaskDao
 import com.example.getitdone.databinding.ActivityMainBinding
 import com.example.getitdone.databinding.DialogAddTaskBinding
 import com.example.getitdone.ui.tasks.TasksFragment
+import com.example.getitdone.util.InputValidator
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlin.concurrent.thread
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
+    private val viewModel : MainViewModel by viewModels()
     private lateinit var binding: ActivityMainBinding
-    private val database: GetItDoneDatabase by lazy {
-        GetItDoneDatabase.getDatabase(this)
-    }
-    private val taskDao: TaskDao by lazy { database.getTaskDao() }
+
     private val tasksFragment: TasksFragment = TasksFragment()
 
 
@@ -41,6 +40,21 @@ class MainActivity : AppCompatActivity() {
             setContentView(root)
         }
 
+        CoroutineScope(Dispatchers.Main).launch {
+            startTitleTicker()
+        }
+
+
+
+    }
+
+    suspend fun startTitleTicker(){
+        var count=1
+        while(true){
+            delay(1000)
+            binding.toolbar.title = "seconds $count"
+            count++
+        }
     }
 
     private fun showAddTaskDialog() {
@@ -51,7 +65,7 @@ class MainActivity : AppCompatActivity() {
             buttonSave.isEnabled = false
 
             editTextTaskTitle.addTextChangedListener {
-                buttonSave.isEnabled = !it.isNullOrEmpty()
+                buttonSave.isEnabled = InputValidator.validInput(it.toString())
             }
 
             buttonShowDetails.setOnClickListener {
@@ -64,9 +78,9 @@ class MainActivity : AppCompatActivity() {
                     title = editTextTaskTitle.text.toString(),
                     description = editTextTaskDetails.text.toString()
                 )
-                thread {
-                    taskDao.createTask(task)
-                }
+                viewModel.createTask(
+                    title = editTextTaskTitle.text.toString(),
+                    description =  editTextTaskDetails.text.toString())
                 dialog.dismiss()
                 tasksFragment.fetchAllTasks()
             }
